@@ -1,0 +1,73 @@
+services:
+  policy-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo-app
+      args:
+        MAIN_CLASS: ostashko.diploma.zerotrust.demo.policy.PolicyServiceApplication
+    container_name: diploma-policy-service
+    environment:
+      SPRING_ARGS: --spring.profiles.active=policy-compose
+    ports:
+      - "8082:8082"
+    restart: unless-stopped
+
+  resource-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo-app
+      args:
+        MAIN_CLASS: ostashko.diploma.zerotrust.demo.resource.ResourceServiceApplication
+    container_name: diploma-resource-service
+    depends_on:
+      - policy-service
+    environment:
+      SPRING_ARGS: --spring.profiles.active=resource-compose
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo-app
+      args:
+        MAIN_CLASS: ostashko.diploma.zerotrust.demo.gateway.GatewayServiceApplication
+    container_name: diploma-gateway-service
+    depends_on:
+      - resource-service
+    environment:
+      DEMO_VAULT_SERVICE_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2lzc3Vlci5kaXBsb21hLmxvY2FsIiwic3ViIjoiZ2F0ZXdheS1kb2NrZXIiLCJhdWQiOiJkaXBsb21hLXNlcnZpY2VzIiwicm9sZXMiOlsiU0VSVklDRSJdLCJpYXQiOjE3MzU2ODk2MDAsIm5iZiI6MTczNTY4OTYwMCwiZXhwIjo0MTAyNDQ0ODAwfQ.Wuz-7fHVlIqPPSHQHTH-FYyw1e286jWfriAQF_UWtxo
+      SPRING_ARGS: --spring.profiles.active=gateway-compose
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: diploma-prometheus
+    depends_on:
+      - gateway-service
+      - resource-service
+      - policy-service
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: diploma-grafana
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infra/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./infra/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    restart: unless-stopped

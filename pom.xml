@@ -1,54 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>4.0.3</version>
-        <relativePath/> <!-- lookup parent from repository -->
+        <relativePath/>
     </parent>
-    <groupId>ostashko</groupId>
-    <artifactId>diploma</artifactId>
+
+    <groupId>ostashko.diploma</groupId>
+    <artifactId>zero-trust-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>diploma</name>
-    <description>diploma</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+    <packaging>pom</packaging>
+
+    <name>zero-trust-parent</name>
+    <description>Zero Trust starter</description>
+
+    <modules>
+        <module>zero-trust-starter-core</module>
+        <module>zero-trust-starter-secrets</module>
+        <module>zero-trust-starter-policy</module>
+        <module>zero-trust-starter-observability</module>
+        <module>zero-trust-starter-security</module>
+        <module>zero-trust-demo</module>
+    </modules>
+
     <properties>
         <java.version>17</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <nimbus-jose-jwt.version>10.3</nimbus-jose-jwt.version>
     </properties>
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>nimbus-jose-jwt</artifactId>
+                <version>${nimbus-jose-jwt.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

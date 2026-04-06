@@ -1,0 +1,11 @@
+package ostashko.diploma.zerotrust.core.event;
+
+public enum ZeroTrustSecurityEventType {
+    AUTHENTICATION_SUCCESS,
+    AUTHENTICATION_FAILURE,
+    AUTHORIZATION_DENIED,
+    OUTBOUND_TOKEN_PROPAGATED,
+    SERVICE_TOKEN_USED,
+    RATE_LIMIT_EXCEEDED,
+    GUARDRAIL_BLOCKED
+}

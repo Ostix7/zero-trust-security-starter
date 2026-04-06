@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: gateway-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - gateway-service:8080
+        labels:
+          application: gateway-service
+
+  - job_name: resource-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - resource-service:8081
+        labels:
+          application: resource-service
+
+  - job_name: policy-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets:
+          - policy-service:8082
+        labels:
+          application: policy-service

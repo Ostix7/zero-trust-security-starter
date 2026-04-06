@@ -1,0 +1,171 @@
+spring:
+  profiles:
+    group:
+      resource-local:
+        - resource
+        - zerotrust-demo
+        - local
+      gateway-local:
+        - gateway
+        - zerotrust-demo
+        - local
+      policy-local:
+        - policy
+        - local
+      resource-compose:
+        - resource
+        - zerotrust-demo
+        - compose
+      gateway-compose:
+        - gateway
+        - zerotrust-demo
+        - compose
+      policy-compose:
+        - policy
+        - compose
+
+---
+spring:
+  config:
+    activate:
+      on-profile: zerotrust-demo
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name:unknown}
+
+zero-trust:
+  enabled: true
+  mode: STRICT
+  inbound:
+    enabled: true
+    jwt:
+      issuer: https://issuer.diploma.local
+      shared-secret: 01234567890123456789012345678901
+      audiences:
+        - diploma-services
+    public-paths:
+      - /public/**
+      - /actuator/health
+      - /actuator/prometheus
+    admin-paths:
+      - /admin/**
+    service-paths:
+      - /internal/**
+    tenant:
+      enabled: true
+      header-name: X-Tenant-Id
+      claim-name: tenant_id
+      protected-paths:
+        - /tenant/**
+    policy:
+      enabled: true
+      protected-paths:
+        - /api/policy/**
+  rate-limit:
+    enabled: true
+    requests-per-second: 20
+    burst-capacity: 40
+  audit:
+    enabled: true
+    log-success: true
+    log-failures: true
+    in-memory-store: true
+  outbound:
+    enabled: true
+    token-mode: USER_OR_SERVICE
+
+---
+spring:
+  config:
+    activate:
+      on-profile: resource
+  application:
+    name: resource-service
+
+server:
+  port: 8081
+
+---
+spring:
+  config:
+    activate:
+      on-profile: gateway
+  application:
+    name: gateway-service
+
+server:
+  port: 8080
+
+zero-trust:
+  outbound:
+    service-token-secret-path: secret/services/gateway
+    service-token-secret-key: token
+
+---
+spring:
+  config:
+    activate:
+      on-profile: policy
+  application:
+    name: policy-service
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name:unknown}
+
+zero-trust:
+  enabled: false
+  inbound:
+    enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+demo:
+  resource:
+    base-url: http://localhost:8081
+
+zero-trust:
+  inbound:
+    policy:
+      endpoint: http://localhost:8082/opa/authorize
+
+---
+spring:
+  config:
+    activate:
+      on-profile: compose
+
+demo:
+  resource:
+    base-url: http://resource-service:8081
+
+zero-trust:
+  inbound:
+    policy:
+      endpoint: http://policy-service:8082/opa/authorize
