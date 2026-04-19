@@ -1,0 +1,269 @@
+{
+  "groups": [
+    {
+      "name": "zero-trust",
+      "type": "ostashko.diploma.zerotrust.core.config.ZeroTrustProperties",
+      "description": "Root configuration for the Zero Trust Spring Boot starter. Controls deny-by-default security, JWT authentication, RBAC, tenant ABAC, external policy evaluation, rate limiting, and observability."
+    },
+    {
+      "name": "zero-trust.inbound",
+      "description": "Inbound request security: JWT validation, CORS, path-based authorization, tenant and policy enforcement."
+    },
+    {
+      "name": "zero-trust.inbound.jwt",
+      "description": "JWT validation settings. Either shared-secret (HS256) or issuer-uri (JWKS) must be set."
+    },
+    {
+      "name": "zero-trust.inbound.cors",
+      "description": "CORS configuration. Wildcard '*' origins are rejected at startup when mode=STRICT."
+    },
+    {
+      "name": "zero-trust.inbound.tenant",
+      "description": "Tenant-aware ABAC. Verifies that the inbound tenant header matches the tenant claim in the JWT."
+    },
+    {
+      "name": "zero-trust.inbound.policy",
+      "description": "External policy engine integration (OPA-like). Protected paths are evaluated via POST to the configured endpoint."
+    },
+    {
+      "name": "zero-trust.outbound",
+      "description": "Outbound call security: automatic JWT propagation and service-token fallback for RestClient, WebClient, and RestTemplate."
+    },
+    {
+      "name": "zero-trust.rate-limit",
+      "description": "Request rate limiting per authenticated principal or client IP. Uses a token-bucket algorithm."
+    },
+    {
+      "name": "zero-trust.guardrails",
+      "description": "Startup-time fail-fast checks. When disabled, unsafe configurations (wildcard public paths, missing JWT config, permissive CORS) are allowed."
+    }
+  ],
+  "properties": [
+    {
+      "name": "zero-trust.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Master switch for the Zero Trust starter. When false, none of the starter beans are created.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.mode",
+      "type": "ostashko.diploma.zerotrust.core.config.ZeroTrustMode",
+      "description": "Operating mode. STRICT enforces production-grade guardrails (no wildcard CORS, no wildcard public paths). BALANCED and DEV are reserved for future relaxations.",
+      "defaultValue": "STRICT"
+    },
+    {
+      "name": "zero-trust.inbound.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable inbound security filter chain (JWT, RBAC, deny-by-default).",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.inbound.jwt.issuer",
+      "type": "java.lang.String",
+      "description": "Expected 'iss' claim value in JWTs. Used to validate that tokens come from your identity provider."
+    },
+    {
+      "name": "zero-trust.inbound.jwt.issuer-uri",
+      "type": "java.lang.String",
+      "description": "Issuer URI that exposes JWKS (e.g. Keycloak realm URL). When set, public keys are fetched automatically."
+    },
+    {
+      "name": "zero-trust.inbound.jwt.shared-secret",
+      "type": "java.lang.String",
+      "description": "HMAC-SHA256 shared secret for JWT validation. Alternative to issuer-uri. Use only for demos or internal systems."
+    },
+    {
+      "name": "zero-trust.inbound.jwt.audiences",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Expected 'aud' claim values. JWTs without a matching audience are rejected."
+    },
+    {
+      "name": "zero-trust.inbound.jwt.roles-claim",
+      "type": "java.lang.String",
+      "description": "JWT claim name that holds the list of roles. Values are converted to Spring Security authorities with the ROLE_ prefix.",
+      "defaultValue": "roles"
+    },
+    {
+      "name": "zero-trust.inbound.jwt.principal-claim",
+      "type": "java.lang.String",
+      "description": "JWT claim name used as the principal name.",
+      "defaultValue": "sub"
+    },
+    {
+      "name": "zero-trust.inbound.cors.allowed-origins",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of CORS origins allowed for cross-origin requests. Wildcard '*' is rejected at startup in STRICT mode."
+    },
+    {
+      "name": "zero-trust.inbound.public-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Ant-style paths accessible without authentication. Wildcard '/**' is rejected at startup."
+    },
+    {
+      "name": "zero-trust.inbound.admin-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Ant-style paths that require ROLE_ADMIN."
+    },
+    {
+      "name": "zero-trust.inbound.service-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Ant-style paths that require ROLE_SERVICE (for service-to-service calls)."
+    },
+    {
+      "name": "zero-trust.inbound.tenant.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable tenant ABAC enforcement.",
+      "defaultValue": false
+    },
+    {
+      "name": "zero-trust.inbound.tenant.header-name",
+      "type": "java.lang.String",
+      "description": "HTTP header that carries the tenant identifier from the client.",
+      "defaultValue": "X-Tenant-Id"
+    },
+    {
+      "name": "zero-trust.inbound.tenant.claim-name",
+      "type": "java.lang.String",
+      "description": "JWT claim that holds the authoritative tenant identifier. Must match the header for the request to pass.",
+      "defaultValue": "tenant_id"
+    },
+    {
+      "name": "zero-trust.inbound.tenant.protected-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Ant-style paths where tenant ABAC is enforced."
+    },
+    {
+      "name": "zero-trust.inbound.policy.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable integration with an external OPA-like policy engine.",
+      "defaultValue": false
+    },
+    {
+      "name": "zero-trust.inbound.policy.engine",
+      "type": "java.lang.String",
+      "description": "Policy engine label (informational).",
+      "defaultValue": "OPA"
+    },
+    {
+      "name": "zero-trust.inbound.policy.endpoint",
+      "type": "java.lang.String",
+      "description": "HTTP endpoint of the policy engine that receives POST {input: ...} and returns {allow, reason}."
+    },
+    {
+      "name": "zero-trust.inbound.policy.fail-closed",
+      "type": "java.lang.Boolean",
+      "description": "When true, requests are denied with 503 if the policy engine is unreachable. When false, requests are allowed on engine failure.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.inbound.policy.protected-paths",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Ant-style paths evaluated by the external policy engine."
+    },
+    {
+      "name": "zero-trust.outbound.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable automatic bearer-token propagation on outbound HTTP calls (RestClient, WebClient, RestTemplate).",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.outbound.token-mode",
+      "type": "ostashko.diploma.zerotrust.core.config.OutboundTokenMode",
+      "description": "Strategy for choosing the outbound bearer token. USER_ONLY propagates only the user JWT. USER_OR_SERVICE falls back to a service token when no user is present. SERVICE_ONLY always uses the service token.",
+      "defaultValue": "USER_OR_SERVICE"
+    },
+    {
+      "name": "zero-trust.outbound.service-token",
+      "type": "java.lang.String",
+      "description": "Direct JWT value used as the service token. Convenient for tests; not recommended for production."
+    },
+    {
+      "name": "zero-trust.outbound.service-token-environment-variable",
+      "type": "java.lang.String",
+      "description": "Name of the environment variable (or system property) from which to read the service token."
+    },
+    {
+      "name": "zero-trust.outbound.service-token-secret-path",
+      "type": "java.lang.String",
+      "description": "Vault-style path where the service token is stored (e.g. secret/services/gateway)."
+    },
+    {
+      "name": "zero-trust.outbound.service-token-secret-key",
+      "type": "java.lang.String",
+      "description": "Key inside the Vault-style secret entry that holds the service token.",
+      "defaultValue": "token"
+    },
+    {
+      "name": "zero-trust.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable per-principal rate limiting. Requests exceeding the limit receive HTTP 429.",
+      "defaultValue": false
+    },
+    {
+      "name": "zero-trust.rate-limit.requests-per-second",
+      "type": "java.lang.Integer",
+      "description": "Sustained rate (tokens refilled per second).",
+      "defaultValue": 10
+    },
+    {
+      "name": "zero-trust.rate-limit.burst-capacity",
+      "type": "java.lang.Integer",
+      "description": "Maximum burst size. Must be >= requests-per-second.",
+      "defaultValue": 20
+    },
+    {
+      "name": "zero-trust.guardrails.fail-on-missing-jwt-config",
+      "type": "java.lang.Boolean",
+      "description": "Fail startup if neither shared-secret nor issuer-uri is configured.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.guardrails.fail-on-wildcard-public-paths",
+      "type": "java.lang.Boolean",
+      "description": "Fail startup if '/**' is listed as a public path.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.guardrails.fail-on-permissive-cors",
+      "type": "java.lang.Boolean",
+      "description": "Fail startup if '*' is listed as a CORS origin in STRICT mode.",
+      "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "zero-trust.mode",
+      "values": [
+        {
+          "value": "STRICT",
+          "description": "Production-grade guardrails. Rejects wildcard CORS and wildcard public paths."
+        },
+        {
+          "value": "BALANCED",
+          "description": "Reserved for a future relaxed profile (intermediate between STRICT and DEV)."
+        },
+        {
+          "value": "DEV",
+          "description": "Reserved for a future development profile with relaxed guardrails."
+        }
+      ]
+    },
+    {
+      "name": "zero-trust.outbound.token-mode",
+      "values": [
+        {
+          "value": "USER_ONLY",
+          "description": "Propagate only the user JWT. No token is sent when no user is authenticated."
+        },
+        {
+          "value": "USER_OR_SERVICE",
+          "description": "Propagate the user JWT when available, otherwise fall back to the service token."
+        },
+        {
+          "value": "SERVICE_ONLY",
+          "description": "Always send the service token, ignoring the user JWT. Useful for background jobs."
+        }
+      ]
+    }
+  ]
+}

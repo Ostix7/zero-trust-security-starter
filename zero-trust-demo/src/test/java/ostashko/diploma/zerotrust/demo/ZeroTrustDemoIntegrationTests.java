@@ -135,6 +135,19 @@ class ZeroTrustDemoIntegrationTests {
     }
 
     @Test
+    void gatewayPropagatesUserTokenViaWebClient() {
+        String userToken = DemoJwtFactory.token(ISSUER, AUDIENCE, SECRET, "bob-webclient", List.of("USER"));
+
+        HttpTestClient.HttpResult response = gatewayClient.get("/api/proxy-webclient/me", userToken);
+
+        assertThat(response.status()).isEqualTo(200);
+        assertThat(gatewayClient.json(response)).containsEntry("principal", "bob-webclient");
+
+        InMemorySecurityEventStore gatewayEvents = gatewayContext.getBean(InMemorySecurityEventStore.class);
+        assertThat(gatewayEvents.countByType(ZeroTrustSecurityEventType.OUTBOUND_TOKEN_PROPAGATED)).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
     void gatewayUsesServiceTokenForPublicServiceCall() {
         HttpTestClient.HttpResult response = gatewayClient.get("/public/service-ping", null);
 

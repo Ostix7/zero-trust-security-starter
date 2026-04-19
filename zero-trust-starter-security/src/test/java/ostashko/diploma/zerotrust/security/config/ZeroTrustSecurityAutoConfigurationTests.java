@@ -7,7 +7,9 @@ import ostashko.diploma.zerotrust.policy.config.ZeroTrustPolicyAutoConfiguration
 import ostashko.diploma.zerotrust.secrets.config.ZeroTrustSecretsAutoConfiguration;
 import ostashko.diploma.zerotrust.security.auth.ZeroTrustJwtAuthenticationConverter;
 import ostashko.diploma.zerotrust.security.outbound.ZeroTrustRestClientBuilderConfigurer;
+import ostashko.diploma.zerotrust.security.outbound.ZeroTrustRestTemplateInterceptor;
 import ostashko.diploma.zerotrust.security.outbound.ZeroTrustTokenResolver;
+import ostashko.diploma.zerotrust.security.outbound.ZeroTrustWebClientCustomizer;
 import ostashko.diploma.zerotrust.security.web.CorrelationIdFilter;
 import ostashko.diploma.zerotrust.security.web.RateLimitFilter;
 import ostashko.diploma.zerotrust.security.web.TenantPolicyEnforcementFilter;
@@ -85,6 +87,20 @@ class ZeroTrustSecurityAutoConfigurationTests {
                 .run(context -> {
                     assertThat(context).hasSingleBean(RateLimitFilter.class);
                 });
+    }
+
+    @Test
+    void registersWebClientCustomizerByDefault() {
+        runner.run(context -> {
+            assertThat(context).hasSingleBean(ZeroTrustWebClientCustomizer.class);
+        });
+    }
+
+    @Test
+    void registersRestTemplateInterceptorByDefault() {
+        runner.run(context -> {
+            assertThat(context).hasSingleBean(ZeroTrustRestTemplateInterceptor.class);
+        });
     }
 
     @Test

@@ -7,14 +7,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @RestController
 public class GatewayProxyController {
 
     private final RestClient resourceRestClient;
+    private final WebClient resourceWebClient;
 
-    public GatewayProxyController(RestClient resourceRestClient) {
+    public GatewayProxyController(RestClient resourceRestClient, WebClient resourceWebClient) {
         this.resourceRestClient = resourceRestClient;
+        this.resourceWebClient = resourceWebClient;
     }
 
     @GetMapping("/api/proxy/me")
@@ -45,6 +48,16 @@ public class GatewayProxyController {
     @GetMapping("/public/service-ping")
     public ResponseEntity<String> proxyServicePing() {
         return proxy("/internal/service-ping");
+    }
+
+    @GetMapping("/api/proxy-webclient/me")
+    public ResponseEntity<String> webClientProxyMe() {
+        String body = resourceWebClient.get()
+                .uri("/api/me")
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+        return ResponseEntity.ok(body);
     }
 
     private ResponseEntity<String> proxy(String uri) {

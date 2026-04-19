@@ -10,7 +10,11 @@ import ostashko.diploma.zerotrust.security.auth.ZeroTrustAudienceValidator;
 import ostashko.diploma.zerotrust.security.auth.ZeroTrustJwtAuthenticationConverter;
 import ostashko.diploma.zerotrust.security.outbound.ZeroTrustRestClientBuilderConfigurer;
 import ostashko.diploma.zerotrust.security.outbound.ZeroTrustRestClientBuilderPostProcessor;
+import ostashko.diploma.zerotrust.security.outbound.ZeroTrustRestTemplateBeanPostProcessor;
+import ostashko.diploma.zerotrust.security.outbound.ZeroTrustRestTemplateInterceptor;
 import ostashko.diploma.zerotrust.security.outbound.ZeroTrustTokenResolver;
+import ostashko.diploma.zerotrust.security.outbound.ZeroTrustWebClientBuilderPostProcessor;
+import ostashko.diploma.zerotrust.security.outbound.ZeroTrustWebClientCustomizer;
 import ostashko.diploma.zerotrust.security.web.CorrelationIdFilter;
 import ostashko.diploma.zerotrust.security.web.TenantPolicyEnforcementFilter;
 import ostashko.diploma.zerotrust.security.web.ZeroTrustAccessDeniedHandler;
@@ -27,6 +31,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -246,5 +251,55 @@ public class ZeroTrustSecurityAutoConfiguration {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    /**
+     * WebClient outbound instrumentation. Active only when WebFlux is on the classpath
+     * (spring-webflux is declared as an optional dependency by the starter).
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(name = "org.springframework.web.reactive.function.client.WebClient")
+    static class ZeroTrustWebClientAutoConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        ZeroTrustWebClientCustomizer zeroTrustWebClientCustomizer(
+                ZeroTrustTokenResolver tokenResolver,
+                ApplicationEventPublisher eventPublisher,
+                @Value("${spring.application.name:application}") String serviceName
+        ) {
+            return new ZeroTrustWebClientCustomizer(tokenResolver, eventPublisher, serviceName);
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        BeanPostProcessor zeroTrustWebClientBuilderPostProcessor(ZeroTrustWebClientCustomizer customizer) {
+            return new ZeroTrustWebClientBuilderPostProcessor(customizer);
+        }
+    }
+
+    /**
+     * RestTemplate outbound instrumentation. RestTemplate is part of spring-web which is
+     * always on the classpath of this starter, so no @ConditionalOnClass is needed.
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(name = "org.springframework.web.client.RestTemplate")
+    static class ZeroTrustRestTemplateAutoConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        ZeroTrustRestTemplateInterceptor zeroTrustRestTemplateInterceptor(
+                ZeroTrustTokenResolver tokenResolver,
+                ApplicationEventPublisher eventPublisher,
+                @Value("${spring.application.name:application}") String serviceName
+        ) {
+            return new ZeroTrustRestTemplateInterceptor(tokenResolver, eventPublisher, serviceName);
+        }
+
+        @Bean
+        @ConditionalOnMissingBean
+        BeanPostProcessor zeroTrustRestTemplateBeanPostProcessor(ZeroTrustRestTemplateInterceptor interceptor) {
+            return new ZeroTrustRestTemplateBeanPostProcessor(interceptor);
+        }
     }
 }

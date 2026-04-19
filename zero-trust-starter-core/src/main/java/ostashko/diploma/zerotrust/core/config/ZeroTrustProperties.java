@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
@@ -15,15 +16,19 @@ public class ZeroTrustProperties {
     private ZeroTrustMode mode = ZeroTrustMode.STRICT;
 
     @Valid
+    @NestedConfigurationProperty
     private final Inbound inbound = new Inbound();
 
     @Valid
+    @NestedConfigurationProperty
     private final Outbound outbound = new Outbound();
 
     @Valid
+    @NestedConfigurationProperty
     private final RateLimit rateLimit = new RateLimit();
 
     @Valid
+    @NestedConfigurationProperty
     private final Guardrails guardrails = new Guardrails();
 
     public boolean isEnabled() {
@@ -62,12 +67,16 @@ public class ZeroTrustProperties {
 
         private boolean enabled = true;
 
+        @NestedConfigurationProperty
         private final Jwt jwt = new Jwt();
 
+        @NestedConfigurationProperty
         private final Cors cors = new Cors();
 
+        @NestedConfigurationProperty
         private final Tenant tenant = new Tenant();
 
+        @NestedConfigurationProperty
         private final Policy policy = new Policy();
 
         private List<String> publicPaths = new ArrayList<>(List.of("/public/**", "/actuator/health"));

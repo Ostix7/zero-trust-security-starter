@@ -55,7 +55,12 @@ function Wait-ForHttp200 {
 }
 
 Write-Host "Starting Zero Trust diploma demo with Docker Compose..." -ForegroundColor Cyan
-docker compose up --build -d
+Push-Location (Split-Path $PSScriptRoot -Parent)
+try {
+    docker compose up --build -d
+} finally {
+    Pop-Location
+}
 
 Wait-ForHealth -Name "policy-service" -Url "http://localhost:8082/actuator/health" -TimeoutSeconds $TimeoutSeconds
 Wait-ForHealth -Name "resource-service" -Url "http://localhost:8081/actuator/health" -TimeoutSeconds $TimeoutSeconds
@@ -69,4 +74,4 @@ Write-Host "Gateway:  http://localhost:8080"
 Write-Host "Resource: http://localhost:8081"
 Write-Host "Policy:   http://localhost:8082"
 Write-Host "Prometheus: http://localhost:9090"
-Write-Host "Grafana:    http://localhost:3000 (admin/admin)"
+Write-Host "Grafana:    http://localhost:3000"

@@ -1,0 +1,32 @@
+{
+  "groups": [
+    {
+      "name": "zero-trust.secrets",
+      "type": "ostashko.diploma.zerotrust.secrets.config.ZeroTrustSecretsProperties",
+      "description": "Secret resolution for outbound service tokens. Pluggable via VaultStyleSecretBackend (SPI)."
+    },
+    {
+      "name": "zero-trust.secrets.vault",
+      "description": "Inline Vault-style backend that reads secrets from YAML. Replaceable with a real HashiCorp Vault (or AWS/Azure) backend by providing a custom VaultStyleSecretBackend bean."
+    }
+  ],
+  "properties": [
+    {
+      "name": "zero-trust.secrets.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable secret resolution. When false, no VaultStyleSecretResolver bean is created.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.secrets.vault.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the built-in InlineVaultStyleSecretBackend. Disable if you register a custom backend.",
+      "defaultValue": false
+    },
+    {
+      "name": "zero-trust.secrets.vault.entries",
+      "type": "java.util.List<ostashko.diploma.zerotrust.secrets.config.ZeroTrustSecretsProperties$Entry>",
+      "description": "Inline secret entries. Each entry has a path and either a (key, value) pair or a values map."
+    }
+  ]
+}

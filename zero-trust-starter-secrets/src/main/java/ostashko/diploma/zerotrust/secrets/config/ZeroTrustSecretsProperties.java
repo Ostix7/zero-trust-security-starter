@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
@@ -15,6 +16,7 @@ public class ZeroTrustSecretsProperties {
     private boolean enabled = true;
 
     @Valid
+    @NestedConfigurationProperty
     private final Vault vault = new Vault();
 
     public boolean isEnabled() {

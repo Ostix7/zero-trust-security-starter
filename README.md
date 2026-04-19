@@ -15,7 +15,7 @@ This repository contains a diploma-oriented Zero Trust platform MVP for Spring B
   - tenant-aware ABAC enforcement
   - unified JSON `401` and `403` responses
   - correlation-id propagation
-  - outbound token propagation for `RestClient`
+  - outbound token propagation for `RestClient`, `WebClient`, and `RestTemplate`
   - service-token fallback for non-human identities
 - `zero-trust-starter-secrets`
   - Vault-style secret backend abstraction
@@ -176,10 +176,7 @@ This starts:
 - Prometheus on `http://localhost:9090`
 - Grafana on `http://localhost:3000`
 
-Grafana credentials:
-
-- username: `admin`
-- password: `admin`
+Grafana opens without login (anonymous access is enabled for the demo).
 
 The Grafana dashboard is provisioned automatically from [zero-trust-overview.json](/C:/Users/ostas/IdeaProjects/diploma/infra/grafana/dashboards/zero-trust-overview.json).
 

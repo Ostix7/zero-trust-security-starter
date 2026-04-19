@@ -1,0 +1,35 @@
+{
+  "groups": [
+    {
+      "name": "zero-trust.audit",
+      "type": "ostashko.diploma.zerotrust.observability.config.ZeroTrustAuditProperties",
+      "description": "Security event auditing: structured logs, Micrometer counters, and optional in-memory store for API access."
+    }
+  ],
+  "properties": [
+    {
+      "name": "zero-trust.audit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable audit logging and metrics emission for security events.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.audit.log-success",
+      "type": "java.lang.Boolean",
+      "description": "When true, AUTHENTICATION_SUCCESS events are persisted in the in-memory store.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.audit.log-failures",
+      "type": "java.lang.Boolean",
+      "description": "When true, AUTHENTICATION_FAILURE, AUTHORIZATION_DENIED, and GUARDRAIL_BLOCKED events are persisted.",
+      "defaultValue": true
+    },
+    {
+      "name": "zero-trust.audit.in-memory-store",
+      "type": "java.lang.Boolean",
+      "description": "Enable the in-memory InMemorySecurityEventStore bean. Useful for exposing recent audit events via a REST endpoint.",
+      "defaultValue": false
+    }
+  ]
+}
