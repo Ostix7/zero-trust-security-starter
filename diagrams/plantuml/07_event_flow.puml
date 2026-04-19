@@ -1,0 +1,56 @@
+@startuml event_flow
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundCorner 6
+skinparam linetype ortho
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #2B6CB0
+skinparam interfaceBackgroundColor #FFFAE7
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Event-орієнтована спостережуваність
+
+package "Видавці подій (security)" as pub {
+  component "AuthenticationEntryPoint\n(AUTHENTICATION_FAILURE)" as ep
+  component "AccessDeniedHandler\n(AUTHORIZATION_DENIED)" as ad
+  component "RequestAuditFilter\n(AUTHENTICATION_SUCCESS)" as raf
+  component "TenantPolicyEnforcementFilter\n(AUTHORIZATION_DENIED)" as tpe
+  component "RateLimitFilter\n(RATE_LIMIT_EXCEEDED)" as rl
+  component "RestClient/WebClient/RestTemplate\ninterceptors\n(OUTBOUND_TOKEN_PROPAGATED,\nSERVICE_TOKEN_USED)" as http
+}
+
+interface "Spring ApplicationEventPublisher" as aep
+component "ZeroTrustSecurityEvent\n(record)" as event
+
+package "Підписники (observability)" as sub {
+  component "AuditLoggingListener\n(SLF4J)" as log
+  component "MetricsListener\n(Micrometer counter\nzero.trust.events)" as metrics
+  component "InMemorySecurityEventStore\n(API /admin/audit/events)" as store
+}
+
+package "Зовнішні системи" as ext {
+  database "Prometheus" as prom
+  component "Grafana dashboard" as graf
+  component "Stdout / файл логів" as fl
+}
+
+ep --> event
+ad --> event
+raf --> event
+tpe --> event
+rl --> event
+http --> event
+
+event --> aep : publishEvent()
+aep --> log
+aep --> metrics
+aep --> store
+
+log --> fl
+metrics --> prom
+prom --> graf
+@enduml

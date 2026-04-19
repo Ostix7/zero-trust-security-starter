@@ -1,0 +1,32 @@
+@startuml rate_limit
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundCorner 6
+skinparam linetype ortho
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #2B6CB0
+skinparam activityDiamondBackgroundColor #FFFAE7
+skinparam activityDiamondBorderColor #B7791F
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Алгоритм token bucket у RateLimitFilter
+
+start
+:Надходить запит;
+:Визначити ключ:\nprincipal з JWT\nабо IP клієнта;
+:ConcurrentHashMap.compute(key):\nотримати або створити\nTokenBucket(capacity, refillRate);
+:refill():\nдодати tokensToAdd =\n(elapsedNanos * rate) / 10^9,\nобмежити capacity;
+if (tokens > 0?) then (так)
+  :CAS decrement (tokens--);
+  :Пропустити запит далі\nпо filter chain;
+  stop
+else (ні)
+  :HTTP 429 Too Many Requests\nRetry-After: 1;
+  :Публікація події\nRATE_LIMIT_EXCEEDED;
+  stop
+endif
+@enduml

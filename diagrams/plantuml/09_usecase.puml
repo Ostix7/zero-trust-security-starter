@@ -1,0 +1,50 @@
+@startuml usecase
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam roundCorner 6
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #2B6CB0
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #2B6CB0
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Варіанти використання Zero Trust стартера
+
+left to right direction
+
+actor "Розробник мікросервісу" as dev
+actor "Кінцевий користувач" as user
+actor "Сервіс-клієнт\n(non-human identity)" as svc
+actor "Адміністратор безпеки" as admin
+actor "Policy engine (OPA)" as opa
+actor "Secret store (Vault)" as vault
+
+rectangle "Zero Trust стартер" {
+  usecase "Декларативна\nконфігурація YAML" as uc1
+  usecase "Fail-fast\nвалідація старту" as uc2
+  usecase "Автентифікація\nчерез JWT" as uc3
+  usecase "RBAC та ABAC\n(tenant)" as uc4
+  usecase "Пробросування\nтокена на downstream" as uc5
+  usecase "Service-token\nіз Vault" as uc6
+  usecase "Обмеження швидкості\n(rate limit)" as uc7
+  usecase "Аудит і метрики\nsecurity подій" as uc8
+  usecase "Делегування\nполітики OPA" as uc9
+}
+
+dev --> uc1
+dev --> uc2
+user --> uc3
+user --> uc4
+user --> uc5
+svc --> uc6
+dev --> uc7
+admin --> uc8
+uc9 --> opa
+uc6 --> vault
+uc5 ..> uc3 : <<include>>
+uc9 ..> uc4 : <<extend>>
+@enduml

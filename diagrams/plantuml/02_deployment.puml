@@ -1,0 +1,47 @@
+@startuml deployment
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundCorner 6
+skinparam linetype ortho
+skinparam nodeBackgroundColor #FFFFFF
+skinparam nodeBorderColor #2B6CB0
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #2F855A
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Схема розгортання демонстраційного середовища (Docker Compose)
+
+cloud "Користувач / Клієнт" as user
+
+node "Docker host" {
+  node "gateway-service\n(Spring Boot 4)\nport 8080" as gw {
+    component "Spring MVC + RestClient + WebClient" as gw_app
+    component "Zero Trust starter" as gw_zt
+  }
+
+  node "resource-service\n(Spring Boot 4)\nport 8081" as rs {
+    component "Spring MVC" as rs_app
+    component "Zero Trust starter" as rs_zt
+  }
+
+  node "policy-service\n(Spring Boot 4)\nport 8082" as ps {
+    component "DemoOpaController\n(імітація OPA)" as ps_app
+  }
+
+  node "prometheus\nport 9090" as prom
+  node "grafana\nport 3000" as graf
+}
+
+user --> gw : HTTPS / JWT
+gw --> rs : REST + Bearer
+rs --> ps : POST /opa/authorize
+gw --> prom : /actuator/prometheus
+rs --> prom : /actuator/prometheus
+ps --> prom : /actuator/prometheus
+graf --> prom : запити на метрики
+user -[#6B7280]-> graf : перегляд дашборду
+@enduml

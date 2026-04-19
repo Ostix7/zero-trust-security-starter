@@ -1,0 +1,49 @@
+@startuml service_token
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.2
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #2B6CB0
+skinparam sequenceLifeLineBorderColor #2B6CB0
+skinparam noteBackgroundColor #FFFAE7
+skinparam noteBorderColor #B7791F
+skinparam arrowColor #2B6CB0
+
+title Виклик сервісу з використанням Vault-style сервісного токена
+
+actor "Анонімний клієнт" as client
+participant "Gateway" as gw
+participant "ZeroTrustTokenResolver" as ztr
+participant "VaultStyleSecretResolver" as vsr
+participant "VaultStyleSecretBackend\n(inline / HashiCorp Vault)" as vsb
+participant "Resource service" as rs
+
+client -> gw : GET /public/service-ping\n(без JWT)
+activate gw
+gw -> gw : SecurityContext = anonymous
+gw -> ztr : resolve()
+activate ztr
+ztr -> ztr : перевірка: user JWT? — ні
+ztr -> ztr : token-mode=USER_OR_SERVICE\n→ перехід до сервісного токена
+ztr -> vsr : resolve(path, key)
+activate vsr
+vsr -> vsb : read("secret/services/gateway")
+activate vsb
+vsb --> vsr : { "token": "<JWT_service>" }
+deactivate vsb
+vsr --> ztr : JWT_service
+deactivate vsr
+ztr --> gw : ResolvedToken(serviceToken=true)
+deactivate ztr
+gw -> rs : GET /internal/service-ping\nAuthorization: Bearer <JWT_service>
+activate rs
+rs -> rs : JWT validation,\nперевірка ROLE_SERVICE
+rs --> gw : 200 { principal: "gateway-service" }
+deactivate rs
+gw -> gw : подія SERVICE_TOKEN_USED
+gw --> client : 200 OK
+deactivate gw
+@enduml

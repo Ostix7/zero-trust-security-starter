@@ -1,0 +1,55 @@
+@startuml policy_evaluation
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.2
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #2B6CB0
+skinparam sequenceLifeLineBorderColor #2B6CB0
+skinparam noteBackgroundColor #FFFAE7
+skinparam noteBorderColor #B7791F
+skinparam arrowColor #2B6CB0
+
+title Делегування рішення щодо доступу зовнішньому policy engine
+
+actor Користувач as user
+participant "Gateway" as gw
+participant "Resource\n(захищений шлях\n/api/policy/**)" as rs
+participant "TenantPolicyEnforcement\nFilter" as tpef
+participant "ZeroTrustPolicy\nEvaluator (SPI)" as zpe
+participant "OpaLike\nPolicyEvaluator" as opa
+participant "Policy-service\n(POST /opa/authorize)" as ps
+
+user -> gw : GET /api/proxy/finance-report\nJWT: dept=finance
+gw -> rs : GET /api/policy/finance-report + JWT
+activate rs
+rs -> tpef : doFilterInternal()
+activate tpef
+tpef -> tpef : шлях входить у policy.protected-paths?
+tpef -> zpe : evaluate(PolicyEvaluationContext)
+activate zpe
+zpe -> opa : evaluate(ctx)
+activate opa
+opa -> ps : POST /opa/authorize\n{ input: { principal, path,\n method, authorities, claims } }
+activate ps
+ps -> ps : правила:\ndept=finance ∨ ROLE_ADMIN
+ps --> opa : { allow: true,\n reason: "finance policy passed" }
+deactivate ps
+opa --> zpe : PolicyDecision.allow(...)
+deactivate opa
+zpe --> tpef : дозвіл
+deactivate zpe
+tpef -> tpef : пропуск далі по ланцюжку
+deactivate tpef
+rs --> gw : 200 OK
+deactivate rs
+gw --> user : 200 { department: "finance" }
+
+note right of opa
+  Якщо engine недоступний:
+  fail-closed=true  → HTTP 503
+  fail-closed=false → запит дозволяється
+end note
+@enduml

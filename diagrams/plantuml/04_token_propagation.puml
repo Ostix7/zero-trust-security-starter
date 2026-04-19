@@ -1,0 +1,44 @@
+@startuml token_propagation
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam sequenceArrowThickness 1.2
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #2B6CB0
+skinparam sequenceLifeLineBorderColor #2B6CB0
+skinparam noteBackgroundColor #FFFAE7
+skinparam noteBorderColor #B7791F
+skinparam arrowColor #2B6CB0
+
+title Пробросування JWT від користувача через Gateway до Resource service
+
+actor Користувач as user
+participant "Gateway\n(Spring MVC)" as gw
+participant "RestClient / WebClient\n(+ ZeroTrust interceptor)" as rc
+participant "Resource\n(Spring MVC)" as rs
+
+user -> gw : GET /api/proxy/me\nAuthorization: Bearer <JWT_user>
+activate gw
+gw -> gw : BearerTokenAuthenticationFilter\nвалідує JWT користувача
+gw -> gw : CorrelationIdFilter\nгенерує X-Correlation-Id
+gw -> rc : .get().uri("/api/me").retrieve()
+activate rc
+rc -> rc : ZeroTrustTokenResolver.resolve()\nmode=USER_OR_SERVICE
+note right of rc
+  З SecurityContextHolder
+  береться JWT поточного
+  користувача
+end note
+rc -> rs : GET /api/me\nAuthorization: Bearer <JWT_user>\nX-Correlation-Id: <uuid>
+activate rs
+rs -> rs : JWT validation + RBAC
+rs --> rc : 200 { principal: "bob" }
+deactivate rs
+rc -> rc : публікує подію\nOUTBOUND_TOKEN_PROPAGATED
+rc --> gw : response
+deactivate rc
+gw --> user : 200 { principal: "bob", correlationId }
+deactivate gw
+@enduml

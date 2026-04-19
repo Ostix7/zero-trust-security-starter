@@ -1,0 +1,91 @@
+@startuml class_model
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundCorner 6
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2B6CB0
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Модель ключових класів і SPI стартера
+
+package "core" {
+  class ZeroTrustProperties {
+    +enabled : boolean
+    +mode : ZeroTrustMode
+    +inbound : Inbound
+    +outbound : Outbound
+    +rateLimit : RateLimit
+    +guardrails : Guardrails
+  }
+  enum ZeroTrustMode {
+    STRICT
+    BALANCED
+    DEV
+  }
+  class ZeroTrustSecurityEvent <<record>> {
+    +type : EventType
+    +timestamp : Instant
+    +principal : String
+    +path : String
+    +method : String
+    +outcome : String
+    +correlationId : String
+  }
+  class ZeroTrustStartupValidator {
+    +afterSingletonsInstantiated()
+  }
+}
+
+package "security" {
+  class ZeroTrustTokenResolver {
+    +resolve() : Optional<ResolvedToken>
+  }
+  class RateLimitFilter
+  class TenantPolicyEnforcementFilter
+  class CorrelationIdFilter
+  class ZeroTrustWebClientCustomizer
+  class ZeroTrustRestTemplateInterceptor
+  class ZeroTrustRestClientBuilderConfigurer
+}
+
+package "policy" {
+  interface ZeroTrustPolicyEvaluator {
+    +evaluate(ctx : PolicyEvaluationContext) : PolicyDecision
+  }
+  class OpaLikePolicyEvaluator
+  class PolicyDecision <<record>>
+  class PolicyEvaluationContext <<record>>
+}
+
+package "secrets" {
+  interface VaultStyleSecretBackend {
+    +read(path) : Optional<Map<String,String>>
+  }
+  class InlineVaultStyleSecretBackend
+  class VaultStyleSecretResolver {
+    +resolve(path, key) : Optional<String>
+  }
+}
+
+package "observability" {
+  class AuditLoggingListener
+  class MetricsListener
+  class InMemorySecurityEventStore
+}
+
+ZeroTrustProperties -- ZeroTrustMode
+ZeroTrustStartupValidator ..> ZeroTrustProperties
+ZeroTrustTokenResolver ..> ZeroTrustProperties
+ZeroTrustTokenResolver ..> VaultStyleSecretResolver
+VaultStyleSecretResolver ..> VaultStyleSecretBackend
+InlineVaultStyleSecretBackend ..|> VaultStyleSecretBackend
+OpaLikePolicyEvaluator ..|> ZeroTrustPolicyEvaluator
+TenantPolicyEnforcementFilter ..> ZeroTrustPolicyEvaluator
+AuditLoggingListener ..> ZeroTrustSecurityEvent
+MetricsListener ..> ZeroTrustSecurityEvent
+InMemorySecurityEventStore ..> ZeroTrustSecurityEvent
+@enduml

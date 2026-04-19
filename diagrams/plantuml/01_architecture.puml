@@ -1,0 +1,68 @@
+@startuml architecture
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 13
+skinparam roundCorner 6
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam packageBackgroundColor #F4F6F8
+skinparam packageBorderColor #4A5568
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #2B6CB0
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Архітектура Zero Trust Spring Boot стартера
+
+package "zero-trust-starter-core" as core {
+  component "ZeroTrustProperties\n(модель конфігурації)" as ztp
+  component "ZeroTrustStartupValidator\n(fail-fast guardrails)" as zsv
+  component "ZeroTrustSecurityEvent\n(event-модель)" as zse
+  component "ZeroTrustMode\nSTRICT / BALANCED / DEV" as zmode
+}
+
+package "zero-trust-starter-security" as sec {
+  component "SecurityFilterChain\n(deny-by-default)" as sfc
+  component "JWT resource-server" as jwt
+  component "TenantPolicyEnforcementFilter" as tenant
+  component "RateLimitFilter" as rl
+  component "CorrelationIdFilter" as cid
+  component "ZeroTrustTokenResolver" as ztr
+  component "HTTP клієнти:\nRestClient / WebClient / RestTemplate" as clients
+}
+
+package "zero-trust-starter-policy" as pol {
+  interface "ZeroTrustPolicyEvaluator" as zpe
+  component "OpaLikePolicyEvaluator" as opa
+}
+
+package "zero-trust-starter-secrets" as secr {
+  interface "VaultStyleSecretBackend" as vsb
+  component "InlineVaultStyleSecretBackend" as ivsb
+  component "VaultStyleSecretResolver" as vsr
+}
+
+package "zero-trust-starter-observability" as obs {
+  component "AuditLoggingListener" as all
+  component "MetricsListener\n(Micrometer)" as ml
+  component "InMemorySecurityEventStore" as es
+}
+
+node "Spring Boot застосунок\n(мікросервіс)" as app
+
+app --> core : залежить
+sec --> core
+pol --> core
+secr --> core
+obs --> core
+
+sec --> pol : делегує рішення
+sec --> secr : бере service-token
+obs -[#6B7280]-> zse : слухає події
+sec -[#6B7280]-> zse : публікує події
+
+opa ..|> zpe
+ivsb ..|> vsb
+@enduml

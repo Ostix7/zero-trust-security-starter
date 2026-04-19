@@ -1,0 +1,61 @@
+@startuml filter_chain
+!pragma layout smetana
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam roundCorner 6
+skinparam linetype ortho
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #2B6CB0
+skinparam activityDiamondBackgroundColor #FFFAE7
+skinparam activityDiamondBorderColor #B7791F
+skinparam arrowColor #2B6CB0
+skinparam arrowThickness 1.2
+
+title Порядок фільтрів у ланцюжку Spring Security
+
+start
+
+:HTTP-запит прибуває;
+
+:CorrelationIdFilter\n(генерація X-Correlation-Id);
+
+:BearerTokenAuthenticationFilter\n(валідація JWT: iss, aud, підпис);
+
+if (Автентифіковано?) then (так)
+  :ZeroTrustRequestAuditFilter\n(подія AUTHENTICATION_SUCCESS);
+  :TenantPolicyEnforcementFilter\n(tenant header = claim?);
+  if (Tenant збігається?) then (так)
+    if (Policy-path?) then (так)
+      :OpaLikePolicyEvaluator\n(POST до policy engine);
+      if (allow?) then (так)
+        if (RateLimitFilter активний?) then (так)
+          if (tokens > 0?) then (так)
+            :Передати до контролера;
+          else (ні)
+            :HTTP 429\nRATE_LIMIT_EXCEEDED;
+            stop
+          endif
+        else (ні)
+          :Передати до контролера;
+        endif
+      else (ні)
+        :HTTP 403\nPOLICY_DENIED;
+        stop
+      endif
+    else (ні)
+      :Передати до контролера;
+    endif
+  else (ні)
+    :HTTP 403\nTENANT_POLICY_DENIED;
+    stop
+  endif
+else (ні)
+  :ZeroTrustAuthenticationEntryPoint\nHTTP 401 UNAUTHORIZED;
+  stop
+endif
+
+:Формування відповіді;
+stop
+@enduml
